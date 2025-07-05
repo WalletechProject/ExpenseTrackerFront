@@ -4,3 +4,13 @@
 @theme {
   --color-primary: #5a0fdb;
 }
+
+/* Configuration personnalisée pour éviter les problèmes de couleur */
+.input,
+.select {
+  @apply text-gray-900 bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+}
+
+.input::placeholder {
+  @apply text-gray-500;
+}
