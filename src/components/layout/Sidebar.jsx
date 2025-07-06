@@ -5,11 +5,18 @@ import {
   TrendingUp,
   Menu,
   X,
+  User,
+  Settings,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout, loadUserProfile } = useAuth();
 
   const menuItems = [
     {
@@ -33,6 +40,34 @@ const Sidebar = () => {
   ];
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const handleProfileRefresh = async () => {
+    try {
+      await loadUserProfile();
+      setIsUserMenuOpen(false);
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    }
+  };
+
+  // Fermer le dropdown quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest(".user-menu-container")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   return (
     <>
@@ -66,8 +101,69 @@ const Sidebar = () => {
           <p className="text-sm text-gray-500 mt-1">Manage your finances</p>
         </div>
 
+        {/* User Profile Section */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="relative user-menu-container">
+            <button
+              onClick={toggleUserMenu}
+              className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                  <User size={20} className="text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900 text-sm">
+                    {user?.username || user?.email || "Utilisateur"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.email || "user@example.com"}
+                  </p>
+                </div>
+              </div>
+              <ChevronDown
+                size={16}
+                className={`text-gray-400 transition-transform duration-200 ${
+                  isUserMenuOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isUserMenuOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  <button className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                    <Settings size={16} className="mr-3 text-gray-400" />
+                    Paramètres
+                  </button>
+                  <button className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                    <User size={16} className="mr-3 text-gray-400" />
+                    Profil
+                  </button>
+                  <button
+                    onClick={handleProfileRefresh}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <User size={16} className="mr-3 text-gray-400" />
+                    Rafraîchir le profil
+                  </button>
+                  <hr className="my-2 border-gray-200" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={16} className="mr-3" />
+                    Se déconnecter
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Navigation */}
-        <nav className="mt-6">
+        <nav className="mt-4 flex-1">
           <ul className="space-y-2 px-4">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
